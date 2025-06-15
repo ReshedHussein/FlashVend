@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     // Email content
     const mailOptions = {
-      from: `"FlashVend Contact Form" <${process.env.SMTP_USER}>`,
+      from: `"FlashVend Contact Form" <${email}>`,
       to: "info@flashvend.com",
       subject: `New Contact Form Submission from ${firstName} ${lastName}`,
       replyTo: email,
