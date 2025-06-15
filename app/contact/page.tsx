@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Phone, Mail, MapPin, ArrowRight, X, Instagram, Music, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export type ContactFormData = {
   firstName: string
@@ -104,20 +103,24 @@ export default function ContactPage() {
                 </p>
 
                 {submitResult?.success ? (
-                  <Alert className="bg-green-50 border-green-200 mb-6">
-                    <AlertTitle className="text-green-600">Success!</AlertTitle>
-                    <AlertDescription className="text-gray-600">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+                    <h3 className="text-green-800 font-semibold mb-2">Success!</h3>
+                    <p className="text-green-700 mb-4">
                       {submitResult.message || "Your message has been received. We'll get back to you shortly."}
-                    </AlertDescription>
-                    <Button className="mt-4 bg-green-600 hover:bg-green-700" onClick={() => setSubmitResult(null)}>
+                    </p>
+                    <Button
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      onClick={() => setSubmitResult(null)}
+                    >
                       Send Another Message
                     </Button>
-                  </Alert>
+                  </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {submitResult?.error && (
-                      <div className="p-4 mb-6 text-red-700 bg-red-100 border border-red-300 rounded">
-                        <strong>Error:</strong> {submitResult.error}
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                        <p className="text-red-800 font-medium">Error</p>
+                        <p className="text-red-700 mt-1">{submitResult.error}</p>
                       </div>
                     )}
 
