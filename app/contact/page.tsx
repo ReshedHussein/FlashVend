@@ -116,9 +116,8 @@ export default function ContactPage() {
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {submitResult?.error && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                        <div className="text-red-800 font-medium">Error</div>
-                        <div className="text-red-700 mt-1">{submitResult.error}</div>
+                      <div className="p-4 mb-6 text-red-700 bg-red-100 border border-red-300 rounded">
+                        <strong>Error:</strong> {submitResult.error}
                       </div>
                     )}
 
