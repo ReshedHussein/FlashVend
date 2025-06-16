@@ -1,8 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -19,9 +17,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Please enter a valid email address" }, { status: 400 })
     }
 
+    // Check if Resend API key is available
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      console.error("RESEND_API_KEY environment variable is not set")
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Email service is not configured. Please contact us directly at info@flashvend.com or call (469) 588-5045.",
+        },
+        { status: 500 },
+      )
+    }
+
+    // Initialize Resend with the API key
+    const resend = new Resend(apiKey)
+
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-      from: "FlashVend Contact <noreply@flashvend.com>",
+      from: "FlashVend Contact <onboarding@resend.dev>", // Using Resend's default domain for testing
       to: ["info@flashvend.com"],
       subject: `New Contact Form Submission from ${firstName} ${lastName}`,
       replyTo: email,
@@ -135,8 +150,24 @@ This message was sent from the FlashVend website contact form.
 
     if (error) {
       console.error("Resend error:", error)
+
+      // Provide more specific error messages
+      if (error.message?.includes("API key")) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Email service configuration error. Please contact us directly at info@flashvend.com or call (469) 588-5045.",
+          },
+          { status: 500 },
+        )
+      }
+
       return NextResponse.json(
-        { success: false, error: "Failed to send email. Please try again later." },
+        {
+          success: false,
+          error: "Failed to send email. Please contact us directly at info@flashvend.com or call (469) 588-5045.",
+        },
         { status: 500 },
       )
     }
@@ -145,12 +176,15 @@ This message was sent from the FlashVend website contact form.
 
     return NextResponse.json({
       success: true,
-      message: "Your message has been sent successfully!",
+      message: "Your message has been sent successfully! We'll get back to you soon.",
     })
   } catch (error) {
     console.error("Contact form error:", error)
     return NextResponse.json(
-      { success: false, error: "An unexpected error occurred. Please try again later." },
+      {
+        success: false,
+        error: "An unexpected error occurred. Please contact us directly at info@flashvend.com or call (469) 588-5045.",
+      },
       { status: 500 },
     )
   }
