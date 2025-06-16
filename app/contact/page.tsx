@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Phone, Mail, MapPin, ArrowRight, X, Instagram, Music, Loader2 } from "lucide-react"
 import Link from "next/link"
 
-export type ContactFormData = {
+interface FormData {
   firstName: string
   lastName: string
   email: string
@@ -19,7 +19,7 @@ export type ContactFormData = {
 }
 
 export default function ContactPage() {
-  const [formState, setFormState] = useState<ContactFormData>({
+  const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
     email: "",
@@ -28,21 +28,20 @@ export default function ContactPage() {
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitResult, setSubmitResult] = useState<{
-    success?: boolean
-    message?: string
-    error?: string
-  } | null>(null)
+  const [submitStatus, setSubmitStatus] = useState<{
+    type: "success" | "error" | null
+    message: string
+  }>({ type: null, message: "" })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormState((prev) => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    setSubmitResult(null)
+    setSubmitStatus({ type: null, message: "" })
 
     try {
       const response = await fetch("/api/contact", {
@@ -50,25 +49,33 @@ export default function ContactPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formState),
+        body: JSON.stringify(formData),
       })
 
       const result = await response.json()
-      setSubmitResult(result)
 
-      if (result.success) {
-        setFormState({
+      if (response.ok && result.success) {
+        setSubmitStatus({
+          type: "success",
+          message: "Thank you for your message! We'll get back to you soon.",
+        })
+        setFormData({
           firstName: "",
           lastName: "",
           email: "",
           phone: "",
           message: "",
         })
+      } else {
+        setSubmitStatus({
+          type: "error",
+          message: result.error || "Something went wrong. Please try again.",
+        })
       }
     } catch (error) {
-      setSubmitResult({
-        success: false,
-        error: "An unexpected error occurred. Please try again later.",
+      setSubmitStatus({
+        type: "error",
+        message: "Network error. Please check your connection and try again.",
       })
     } finally {
       setIsSubmitting(false)
@@ -97,126 +104,124 @@ export default function ContactPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start max-w-6xl mx-auto">
               <div>
                 <h2 className="text-3xl font-bold text-blue-600 mb-6">Send Us a Message</h2>
-
                 <p className="text-gray-600 mb-8">
                   Fill out the form below and one of our representatives will get back to you as soon as possible.
                 </p>
 
-                {submitResult?.success ? (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-                    <h3 className="text-green-800 font-semibold mb-2">Success!</h3>
-                    <p className="text-green-700 mb-4">
-                      {submitResult.message || "Your message has been received. We'll get back to you shortly."}
-                    </p>
-                    <Button
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                      onClick={() => setSubmitResult(null)}
-                    >
-                      Send Another Message
-                    </Button>
+                {submitStatus.type === "success" && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                    <p className="text-green-800 font-medium">Success!</p>
+                    <p className="text-green-700 mt-1">{submitStatus.message}</p>
                   </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    {submitResult?.error && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                        <p className="text-red-800 font-medium">Error</p>
-                        <p className="text-red-700 mt-1">{submitResult.error}</p>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
-                      <div>
-                        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                          First Name *
-                        </label>
-                        <Input
-                          id="firstName"
-                          name="firstName"
-                          value={formState.firstName}
-                          onChange={handleChange}
-                          required
-                          className="w-full"
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                          Last Name *
-                        </label>
-                        <Input
-                          id="lastName"
-                          name="lastName"
-                          value={formState.lastName}
-                          onChange={handleChange}
-                          required
-                          className="w-full"
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                        Email Address *
-                      </label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={formState.email}
-                        onChange={handleChange}
-                        required
-                        className="w-full"
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone Number *
-                      </label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        value={formState.phone}
-                        onChange={handleChange}
-                        required
-                        className="w-full"
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                        Message *
-                      </label>
-                      <Textarea
-                        id="message"
-                        name="message"
-                        value={formState.message}
-                        onChange={handleChange}
-                        required
-                        className="w-full min-h-[150px]"
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full rounded-full bg-blue-600 hover:bg-blue-700"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Sending...
-                        </>
-                      ) : (
-                        <>
-                          Submit
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </>
-                      )}
-                    </Button>
-                  </form>
                 )}
+
+                {submitStatus.type === "error" && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                    <p className="text-red-800 font-medium">Error</p>
+                    <p className="text-red-700 mt-1">{submitStatus.message}</p>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                        First Name *
+                      </label>
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        type="text"
+                        required
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        disabled={isSubmitting}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                        Last Name *
+                      </label>
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        type="text"
+                        required
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        disabled={isSubmitting}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address *
+                    </label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      disabled={isSubmitting}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number *
+                    </label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      required
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      disabled={isSubmitting}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                      Message *
+                    </label>
+                    <Textarea
+                      id="message"
+                      name="message"
+                      required
+                      value={formData.message}
+                      onChange={handleInputChange}
+                      disabled={isSubmitting}
+                      className="w-full min-h-[120px]"
+                      placeholder="Tell us about your vending needs..."
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full py-3"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending Message...
+                      </>
+                    ) : (
+                      <>
+                        Send Message
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+                </form>
               </div>
 
               <div className="bg-gray-50 p-8 rounded-xl">
