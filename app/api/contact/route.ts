@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-      from: "FlashVend Contact <onboarding@resend.dev>", // Using Resend's default domain for testing
+      from: "FlashVend Contact <info@flashvend.com>", // Using Resend's default domain for testing
       to: ["info@flashvend.com"],
       subject: `New Contact Form Submission from ${firstName} ${lastName}`,
       replyTo: email,
